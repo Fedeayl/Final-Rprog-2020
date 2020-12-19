@@ -1,0 +1,125 @@
+---
+title: "Trabajo final"
+author: "Federico Acosta y Lara"
+date: "12/17/2020"
+output: pdf_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, include=FALSE}
+Data <- rio::import(here::here("elecciones_nacionales_19_hoja_circuito.xlsx"))
+Edades <- rio::import(here::here("edad_circuitos_promedio_2019.xlsx"))
+
+library(ggplot2)
+source(here::here("Funciones.R"))
+```
+
+
+
+1. ¿Cuál fue el resultado de la elección en porcentaje a nivel nacional?
+
+```{r}
+Base <- Data
+
+#Resultados nacionales
+ResNac<- aggregate(CNT_VOTOS ~ LEMA, data = Base, sum)
+ResNac <- ResNac[order(ResNac$CNT_VOTOS, decreasing = T),]
+ResNac$Per <- round(100*(ResNac$CNT_VOTOS /sum(ResNac$CNT_VOTOS)),2)
+names(ResNac) <- c("Partido", "Votos", "Porcentaje")
+rownames(ResNac) <- NULL
+
+ResNac
+
+```
+
+2. ¿Quién ganó la elección en cada departamento y cuál fue la distancia en términos porcentuales entre el primero y el segundo en cada departamento
+
+```{r}
+
+winner(Base)
+
+```
+
+
+3. ¿Cuál fue la hoja de votación más votada en cada departamento y para cada uno de los tres partidos principales del sistema?
+
+```{r}
+
+Hoja_win(Base)
+
+```
+
+
+4. ¿En que departamento votó mejor el partido Cabildo Abierto?
+
+```{r}
+
+# Resultados Cabildo
+
+TotalDepto <- aggregate(CNT_VOTOS ~ DEPTO, data = Base, sum)
+ResCA<- aggregate(CNT_VOTOS ~ DEPTO, data = Base, sum, subset = Base$LEMA =="Partido Cabildo Abierto")
+ResCA$porcentaje <- round(100*(ResCA$CNT_VOTOS/TotalDepto$CNT_VOTOS),2)
+
+ResCA$DEPTO[which.max(ResCA$porcentaje)]
+
+```
+              
+
+5. ¿Cuál es la distribución de edad en los circuitos de todo el país en donde ganó o salió segundo Cabildo Abierto?
+
+```{r}
+Edad <- Edades[c(1,2,6)]
+names(Edad) <- c("DEPTO", "CIRCUITO", "Edadprom")
+Cabildo <- rbind(Primero = Circ_winner(Base, Partido = "Partido Cabildo Abierto"),
+                 Segundo = Circ_second(Base, Partido = "Partido Cabildo Abierto"))
+
+CabildoA <- merge(Edad, Cabildo, by=c("DEPTO", "CIRCUITO"))
+
+Estadisticos(CabildoA$Edadprom)
+Estadisticos(Edad$Edadprom)
+
+par(mfrow=c(1,1))
+boxplot(CabildoA$Edadprom, col = "gold1",
+        main = "Distribución de edad promedio",
+        sub= "Circuitos donde CA fue exitoso",
+        ylim = c(18,90),
+        ylab= "años")
+
+```
+
+6. Presente los resultados de la pregunta 1 y 2 gráficamente
+
+```{r}
+ResNac
+
+Gr1 <- ggplot(ResNac, aes(x=Partido, y=Porcentaje))+
+        geom_col(show.legend = T)+
+        
+
+```
+
+
+7. Presente gráficamente (en un panel) un ajuste lineal de la votación por circuito de cada partido y la edad promedio de cada circuito de Montevideo
+
+```{r}
+
+Edad <- Edad <- Edades[c(1,2,6)]
+names(Edad) <- c("DEPTO", "CIRCUITO", "Edadprom")
+FA <- FUN_Votos(Base, Departamento = "Montevideo", Partido = "Partido Frente Amplio", Circuito = T)
+
+FA <- as.data.frame(merge(FA, Edad, by= c("DEPTO", "CIRCUITO")))
+plot(FA$Edadprom, FA$CNT_VOTOS)
+
+PN <- FUN_Votos(Base, Departamento = "Montevideo", Partido = "Partido Nacional", Circuito = TRUE)
+
+B <- merge(FA, PN, by=c("DEPTO", "CIRCUITO"))
+head(B)
+```
+
+
