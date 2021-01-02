@@ -1,3 +1,30 @@
+# Función para asignar un vector con el nombre de los departamentos según el orden de la Corte Electoral
+Vector_Departamentos <- function() {
+  V <- c(
+    "Montevideo",
+    "Canelones",
+    "Maldonado",
+    "Rocha",
+    "Treinta y Tres",
+    "Cerro Largo",
+    "Rivera",
+    "Artigas",
+    "Salto",
+    "Paysandu",
+    "Rio Negro",
+    "Soriano",
+    "Colonia",
+    "San Jose",
+    "Flores",
+    "Florida",
+    "Durazno",
+    "Lavalleja",
+    "Tacuarembo"
+  )
+  V
+  
+}
+
 # Función de resultados generales, por departamento, partido, circuito, hoja.
 FUN_Votos <- function(data,
                       Departamento = 1:19,
@@ -40,27 +67,7 @@ FUN_Votos <- function(data,
   
   l <- list()
   
-  depto <- c(
-    "Montevideo",
-    "Canelones",
-    "Maldonado",
-    "Rocha",
-    "Treinta y Tres",
-    "Cerro Largo",
-    "Rivera",
-    "Artigas",
-    "Salto",
-    "Paysandu",
-    "Rio Negro",
-    "Soriano",
-    "Colonia",
-    "San Jose",
-    "Flores",
-    "Florida",
-    "Durazno",
-    "Lavalleja",
-    "Tacuarembo"
-  )
+  depto <- Vector_Departamentos()
   
   if (is.numeric(Departamento) == FALSE &
       any(Departamento %in% depto)) {
@@ -104,9 +111,10 @@ FUN_Votos <- function(data,
 
 # Función para identificar el ganador por departamento
 win <- function(data){
-        L <- FUN_Votos(data, Departamento= 1:19, As.Arg = TRUE) # Utiliza la función base para estructurar los datos
+        L <- FUN_Votos(data, As.Arg = TRUE) # Utiliza la función base para estructurar los datos
         v <- character()
-       
+        depto <- Vector_Departamentos()
+        
         # Extrae el ganador por departamento
         for(i in 1:length(L)){
                 v[i] <-  L[[i]][c(2,3)][1,1]
@@ -124,8 +132,10 @@ win <- function(data){
 
 # Función para determinar el margen de victoria
 winfor <- function(data, Departamento){
-        L <- FUN_Votos(data, Departamento=1:19, As.Arg = TRUE) # Utiliza la función base para estructurar los datos
+        L <- FUN_Votos(data, As.Arg = TRUE) # Utiliza la función base para estructurar los datos
         v <- numeric()
+        depto <- Vector_Departamentos()
+        
         
         # Aprovechando el Df ordeando, extraer el primer y el segundo valor de cada entrada
         # Luego calcula el porcentaje, con dos decimales
@@ -159,11 +169,7 @@ Hoja_win <- function(data, Departamento=1:19){
         
         A <- aggregate (CNT_VOTOS ~ DEPTO + LEMA + HOJA, data, sum)
         l <- list()
-        depto <- c("Montevideo", "Canelones", "Maldonado", "Rocha", 
-                   "Treinta y Tres", "Cerro Largo", "Rivera", "Artigas", 
-                   "Salto", "Paysandu", "Rio Negro", "Soriano", "Colonia", 
-                   "San Jose", "Flores", "Florida", "Durazno", "Lavalleja", 
-                   "Tacuarembo")
+        depto <- Vector_Departamentos()
         
         if(is.numeric(Departamento) ==FALSE & any(Departamento %in% depto)){ 
                 Departamento <- which(Departamento == depto)
@@ -211,11 +217,7 @@ Circ_winner <- function(data, Departamento=1:19, Partido =
         
         A <- aggregate (CNT_VOTOS ~ DEPTO + LEMA + CIRCUITO, data, sum)
         l <- list()
-        depto <- c("Montevideo", "Canelones", "Maldonado", "Rocha", 
-                   "Treinta y Tres", "Cerro Largo", "Rivera", "Artigas", 
-                   "Salto", "Paysandu", "Rio Negro", "Soriano", "Colonia", 
-                   "San Jose", "Flores", "Florida", "Durazno", "Lavalleja", 
-                   "Tacuarembo")
+        depto <- Vector_Departamentos()
         
         if(is.numeric(Departamento) ==FALSE & any(Departamento %in% depto)){ 
                 Departamento <- which(Departamento == depto)
@@ -250,11 +252,7 @@ Circ_second <- function(data, Departamento=1:19, Partido =
   
   A <- aggregate (CNT_VOTOS ~ DEPTO + LEMA + CIRCUITO, data, sum)
   l <- list()
-  depto <- c("Montevideo", "Canelones", "Maldonado", "Rocha", 
-             "Treinta y Tres", "Cerro Largo", "Rivera", "Artigas", 
-             "Salto", "Paysandu", "Rio Negro", "Soriano", "Colonia", 
-             "San Jose", "Flores", "Florida", "Durazno", "Lavalleja", 
-             "Tacuarembo")
+  depto <- Vector_Departamentos()
   
   if(is.numeric(Departamento) ==FALSE & any(Departamento %in% depto)){ 
     Departamento <- which(Departamento == depto)
@@ -291,12 +289,20 @@ Estadisticos <- function(x){
   
   stopifnot(is.numeric(x))
   
-      v <- c(min(x), round(mean(x, na.rm = T),2), median(x, na.rm = T), max(x), round(sd(x, na.rm = T),2))
-      vc <- c("Mínimo", "Media", "Mediana", "Máximo", "D.Estandar")
-      V <- as.data.frame(cbind(vc, v))
+      v <- c(min(x), 
+             round(mean(x, na.rm = T),2), 
+             median(x, na.rm = T), 
+             max(x), 
+             round(sd(x, na.rm = T),2),
+             length(x))
+     
+       vc <- c("Mínimo", "Media", "Mediana", "Máximo", "D.Estandar", "N")
+      
+       V <- as.data.frame(cbind(vc, v))
       
       V
 }
+
 
 
 

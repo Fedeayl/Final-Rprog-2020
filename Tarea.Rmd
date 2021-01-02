@@ -12,12 +12,16 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-```{r, include=FALSE}
-Data <- rio::import(here::here("elecciones_nacionales_19_hoja_circuito.xlsx"))
-Edades <- rio::import(here::here("edad_circuitos_promedio_2019.xlsx"))
+```{r}
+Data <- rio::import(here::here("Data","elecciones_nacionales_19_hoja_circuito.xlsx"))
+Edades <- rio::import(here::here("Data","edad_circuitos_promedio_2019.xlsx"))
 
+library(kableExtra)
 library(ggplot2)
+library(ggthemes)
 source(here::here("Funciones.R"))
+
+Base <- Data
 ```
 
 
@@ -25,16 +29,17 @@ source(here::here("Funciones.R"))
 1. ¿Cuál fue el resultado de la elección en porcentaje a nivel nacional?
 
 ```{r}
-Base <- Data
+T1 <- doBy::summary_by(data = FUN_Votos(Base), formula = CNT_VOTOS ~ LEMA, 
+                               FUN = sum, order = FALSE)
+T1$Porcentaje <- round(100*(T1$CNT_VOTOS /sum(T1$CNT_VOTOS)),2)
 
-#Resultados nacionales
-ResNac<- aggregate(CNT_VOTOS ~ LEMA, data = Base, sum)
-ResNac <- ResNac[order(ResNac$CNT_VOTOS, decreasing = T),]
-ResNac$Per <- round(100*(ResNac$CNT_VOTOS /sum(ResNac$CNT_VOTOS)),2)
-names(ResNac) <- c("Partido", "Votos", "Porcentaje")
-rownames(ResNac) <- NULL
+kbl(T1, caption = "Resultado por departamento. Elección nacional. Uruguay 2019" , 
+    col.names = c("Partido", "Votos", "% del total") )%>% 
+  kable_paper("hover", full_width = F, html_font = "Cambria" ) %>% 
+  kable_styling(font_size = 12) %>% 
+  footnote("Fuente: Elaboración propia en base a datos de la Corte Electoral", 
+           general_title = "", fixed_small_size = T)
 
-ResNac
 
 ```
 
@@ -42,7 +47,15 @@ ResNac
 
 ```{r}
 
-winner(Base)
+T2 <- winner(Base)
+
+T2 %>% 
+  kbl(caption = "Partido ganador por departamento y margen de victoria. Elección Nacional. Uruguay 2019",
+      col.names = c("Departamento", "Partido Ganador", "Margen (%)"),align = "llr") %>% 
+  kable_paper("hover", full_width = F, html_font = "Cambria" ) %>% 
+  kable_styling(font_size = 12) %>% 
+  footnote("Fuente: Elaboración propia en base a datos de la Corte Electoral", 
+           general_title = "", fixed_small_size = T)
 
 ```
 
@@ -51,7 +64,27 @@ winner(Base)
 
 ```{r}
 
-Hoja_win(Base)
+T3 <- Hoja_win(Base)
+
+T3 %>% 
+  kbl(caption = "Hoja más votada por departamento y por partido. Elección nacional. Uruguay 2019") %>% 
+  kable_paper("hover", full_width = F, html_font = "Cambria" ) %>% 
+  kable_styling(font_size = 12) %>% 
+  collapse_rows(columns = 1) %>% 
+  footnote("Fuente: Elaboración propia en base a datos de la Corte Electoral", 
+           general_title = "", fixed_small_size = T)
+
+
+
+Hx <- unique(T3$Hoja)
+H <- function(Tabla, Vector) { 
+  v <- vector()
+  for(i in 1:length(Vector)){
+     v[i]  <- sum(Vector[i]==Tabla$Hoja)
+  }
+  v
+}
+H(T3, Hx)
 
 ```
 
@@ -60,7 +93,7 @@ Hoja_win(Base)
 
 ```{r}
 
-# Resultados Cabildo
+Base <- Data
 
 TotalDepto <- aggregate(CNT_VOTOS ~ DEPTO, data = Base, sum)
 ResCA<- aggregate(CNT_VOTOS ~ DEPTO, data = Base, sum, subset = Base$LEMA =="Partido Cabildo Abierto")
@@ -74,6 +107,8 @@ ResCA$DEPTO[which.max(ResCA$porcentaje)]
 5. ¿Cuál es la distribución de edad en los circuitos de todo el país en donde ganó o salió segundo Cabildo Abierto?
 
 ```{r}
+Base <- Data
+
 Edad <- Edades[c(1,2,6)]
 names(Edad) <- c("DEPTO", "CIRCUITO", "Edadprom")
 Cabildo <- rbind(Primero = Circ_winner(Base, Partido = "Partido Cabildo Abierto"),
@@ -81,8 +116,9 @@ Cabildo <- rbind(Primero = Circ_winner(Base, Partido = "Partido Cabildo Abierto"
 
 CabildoA <- merge(Edad, Cabildo, by=c("DEPTO", "CIRCUITO"))
 
+
 Estadisticos(CabildoA$Edadprom)
-Estadisticos(Edad$Edadprom)
+
 
 par(mfrow=c(1,1))
 boxplot(CabildoA$Edadprom, col = "gold1",
@@ -91,17 +127,29 @@ boxplot(CabildoA$Edadprom, col = "gold1",
         ylim = c(18,90),
         ylab= "años")
 
+
 ```
 
 6. Presente los resultados de la pregunta 1 y 2 gráficamente
 
 ```{r}
-ResNac
 
-Gr1 <- ggplot(ResNac, aes(x=Partido, y=Porcentaje))+
-        geom_col(show.legend = T)+
-        
+T1 <- doBy::summary_by(data = FUN_Votos(Base), formula = CNT_VOTOS ~ LEMA, 
+                               FUN = sum, order = FALSE)
+T1$Porcentaje <- round(100*(T1$CNT_VOTOS /sum(T1$CNT_VOTOS)),2)
 
+T1x <- reshape2::melt(T1)
+T1x <- T1x[T1x$variable == "Porcentaje",]
+T1x$LEMA <-  c("FA", "PN","PC", "CA", "PERI", "PG", "PI", "PVA", "AP", "PD", "PT")
+
+G1 <- ggplot(data = T1x, aes(x = reorder(LEMA, -value), y = value)) +
+geom_bar(stat="identity", position="stack", fill = "deepskyblue4", color = "black") + ylim(0,50) +
+geom_text(aes(label= paste0(value, "%")), vjust = -0.5, color = "gray9", size = 3) + labs(x = "", y = "",
+title = "Resultado de la elección nacional", subtitle = "27 de octubre de 2019",
+caption = "Elaboración en base a datos de la Corte Electoral") +
+theme_calc()
+
+G1
 ```
 
 
@@ -109,17 +157,28 @@ Gr1 <- ggplot(ResNac, aes(x=Partido, y=Porcentaje))+
 
 ```{r}
 
-Edad <- Edad <- Edades[c(1,2,6)]
+Edad <- Edades[c(1,2,6)]
 names(Edad) <- c("DEPTO", "CIRCUITO", "Edadprom")
-FA <- FUN_Votos(Base, Departamento = "Montevideo", Partido = "Partido Frente Amplio", Circuito = T)
 
-FA <- as.data.frame(merge(FA, Edad, by= c("DEPTO", "CIRCUITO")))
-plot(FA$Edadprom, FA$CNT_VOTOS)
+DF <- FUN_Votos(Base, Departamento = "Montevideo", Circuito = TRUE)
+DF <- merge(DF, Edad, by=c("DEPTO", "CIRCUITO"))
 
-PN <- FUN_Votos(Base, Departamento = "Montevideo", Partido = "Partido Nacional", Circuito = TRUE)
 
-B <- merge(FA, PN, by=c("DEPTO", "CIRCUITO"))
-head(B)
+G2 <- ggplot(DF, aes(x=CNT_VOTOS, y=Edadprom))+
+  geom_point()+
+  facet_wrap(~reorder(LEMA, -CNT_VOTOS), scales = "free") +
+  geom_smooth(method='lm')+
+  labs(colour = NULL, title = "Votación por partido y por circuito vs edad promedio del circuito",
+             subtitle = "Elecciones nacionales. Uruguay 2019",
+             caption = "Fuente: elaboración propia sobre datos de la Corte Electoral")+
+  xlab("Cantidad de votos")+
+  ylab("Edad promedio del circuito")+
+  theme(plot.margin = margin(30,30,30,30))+
+  theme_calc()
+
+G2
+
+
 ```
 
 
