@@ -131,7 +131,7 @@ win <- function(data){
 }
 
 # Función para determinar el margen de victoria
-winfor <- function(data, Departamento){
+winfor <- function(data){
         L <- FUN_Votos(data, As.Arg = TRUE) # Utiliza la función base para estructurar los datos
         v <- numeric()
         depto <- Vector_Departamentos()
@@ -150,7 +150,7 @@ winfor <- function(data, Departamento){
 }
 
 # Función de resultados que combina las funciones win y winfor
-winner <- function(data){
+Winner <- function(data){
         w1 <- win(data)
         w2 <- winfor(data)
 
@@ -202,7 +202,6 @@ Hoja_win <- function(data, Departamento=1:19){
         
         
 }
-
 
 
 
