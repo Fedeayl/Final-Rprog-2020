@@ -298,6 +298,7 @@ Estadisticos <- function(x){
        vc <- c("Mínimo", "Media", "Mediana", "Máximo", "D.Estandar", "N")
       
        V <- as.data.frame(cbind(vc, v))
+       names(V) <- c("Estadístico", "Valor")
       
       V
 }
