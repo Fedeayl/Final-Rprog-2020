@@ -16,7 +16,9 @@ FUN_Votos -> Esta función devuelve los resultados generales por partido políti
         
 Winner -> Regresa un data frame  con tres columnas que corresponden al departamento, el partido ganador en ese departamento y el margen de victoria que obtuvo dicho partido.Winner() simplemente combina dos dataframes que son resultados de la función win(), que determina partido ganador por departamento y winfor() que recoge el margen de victoria en cada uno de ellos.  El único argumento admitido en Winner() es "data" como la base de datos a utilizar, que debe cumplir los requisitos de la función FUN_Votos, pues tanto win() como winfor() la utilizan como insumo. 
 
+
 Hoja_win() -> Devuelve un data frame con la hoja más votada de cada partido (los tres principales) en cada cada departamento y los votos obtenidos por esta. Admite dos argumentos, "data" que correspode a la base de datos y debe cumplir los mismos requisitos que en FUN_Votos, y Departamento, que admite ingresar un departamento a la vez (debería admitir un vector, cosa a solucionar)
+
 
 
 

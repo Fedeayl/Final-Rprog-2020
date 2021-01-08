@@ -32,7 +32,7 @@ Edades <- rio::import(here::here("Data","edad_circuitos_promedio_2019.xlsx"))
 library(kableExtra)
 library(ggplot2)
 library(ggthemes)
-source(here::here("Funciones.R"))
+source(here::here("Funciones.R")) #La explicación de las funciones en ReadMe.txt
 
 Base <- Data
 
@@ -43,8 +43,10 @@ Base <- Data
 1. **¿Cuál fue el resultado de la elección en porcentaje a nivel nacional?**
 
 ```{r Preg1a}
-T1 <- doBy::summary_by(data = FUN_Votos(Base), formula = CNT_VOTOS ~ LEMA, 
-                               FUN = sum, order = FALSE)
+T1 <- doBy::summary_by(data = FUN_Votos(Base), formula = CNT_VOTOS ~ LEMA, FUN = sum, order = FALSE) 
+
+# Otra opción: aggregate(CNT_VOTOS ~ LEMA, Base, sum), pero con doBy sale ordenada de mayor a menor sin necesidad de más código. 
+
 T1$Porcentaje <- round(100*(T1$CNT_VOTOS /sum(T1$CNT_VOTOS)),2)
 ```
 
@@ -57,7 +59,7 @@ T1 %>% kbl(., caption = "Resultado por departamento. Elección nacional. Uruguay
           col.names = c("Partido", "Votos", "% del total") )%>% 
       kable_paper("hover", full_width = F, html_font = "Cambria" ) %>% 
       row_spec(row = 0 ,bold=T) %>% 
-      kable_styling(font_size = 12) %>% 
+      kable_styling(font_size = 12, position="left") %>% 
       footnote("Fuente: Elaboración propia en base a datos de la Corte Electoral", 
                general_title = "", fixed_small_size = T)
 
@@ -78,7 +80,7 @@ T2 %>%
           col.names = c("Departamento", "Partido Ganador", "Margen (%)"),align = "llr") %>%
       kable_paper("hover", full_width = F, html_font = "Cambria" ) %>%
       row_spec(row = 0 ,bold=T) %>%
-      kable_styling(font_size = 12) %>% 
+      kable_styling(font_size = 12, position="left") %>% 
       footnote("Fuente: Elaboración propia en base a datos de la Corte Electoral",
                general_title = "", fixed_small_size = T)
 
@@ -98,7 +100,7 @@ T3 <- Hoja_win(Base)
 T3 %>% kbl(caption = "Hoja más votada por departamento y por partido. Elección nacional. Uruguay 2019") %>% 
       kable_paper("hover", full_width = F, html_font = "Cambria" ) %>% 
       row_spec(row = 0 ,bold=T) %>% 
-      kable_styling(font_size = 12) %>% 
+      kable_styling(font_size = 12, position="left") %>% 
       collapse_rows(columns = 1) %>% 
       footnote("Fuente: Elaboración propia en base a datos de la Corte Electoral", 
                general_title = "", fixed_small_size = T)
@@ -136,8 +138,16 @@ Es de notar que en el caso del Frente Amplio, la hoja ganadora en más departame
 ```{r Preg4}
 
 TotalDepto <- aggregate(CNT_VOTOS ~ DEPTO, data = Base, sum)
-ResCA<- aggregate(CNT_VOTOS ~ DEPTO, data = Base, sum, subset = Base$LEMA =="Partido Cabildo Abierto")
+
+ResCA<- aggregate(CNT_VOTOS ~ DEPTO, data = Base, sum, 
+                  subset = Base$LEMA =="Partido Cabildo Abierto")
+
 ResCA$porcentaje <- round(100*(ResCA$CNT_VOTOS/TotalDepto$CNT_VOTOS),2)
+
+# Con FUN_Votos() 
+# TotalDepto <- doBy::summary_by(FUN_Votos(Base), formula = CNT_VOTOS ~ DEPTO, FUN=sum, order=FALSE)
+# ResCA <- FUN_Votos(Base, Partido="Partido Cabildo Abierto")
+# ResCA$porcentaje <- round(100*(ResCA$CNT_VOTOS/TotalDepto$CNT_VOTOS),2)
 
 ```
 
@@ -146,50 +156,102 @@ El departamento en el que Cabildo Abierto obtuvo su mejor votación (como porcen
 5. **¿Cuál es la distribución de edad en los circuitos de todo el país en donde ganó o salió segundo Cabildo Abierto?**
 
 La tabla inferior muestra los principales estadísticos de resumen de la distribución de edad en los circuitos en los que Cabildo Abierto salió primero o segundo. 
-```{r Preg5a}
-Base <- Data
 
+```{r Consideraciones previas, include=FALSE}
+# La base de edades requiere algunas consideraciones para que al combinarla con la base general de resultados por circuito el resultado sea satisfactorio y no haya pérdida ni duplicaciones de caso.
+
+# Para mas claridad asignaré los mismos nombres a los columnas comunes en ambas DF.
 Edad <- Edades[c(1,2,6)]
 names(Edad) <- c("DEPTO", "CIRCUITO", "Edadprom")
-Cabildo <- rbind(Primero = Circ_winner(Base, Partido = "Partido Cabildo Abierto"),
-                 Segundo = Circ_second(Base, Partido = "Partido Cabildo Abierto"))
 
-CabildoA <- merge(Edad, Cabildo, by=c("DEPTO", "CIRCUITO"))
+# Lo primero es corregir los nombres de los departamentos de un DF, para que sean iguales en ambos (de lo contrario habrá pérdida de casos al combinar las bases).
 
+setdiff(unique(Edad$DEPTO), unique(Base$DEPTO)) # Hay inconvenientes en cuatro casos
 
-Estadisticos(CabildoA$Edadprom)
-Estadisticos(Edad$Edadprom)
+Edad$DEPTO[Edad$DEPTO=="Tacuarembó"] <- "Tacuarembo"
+Edad$DEPTO[Edad$DEPTO=="San José"] <- "San Jose"
+Edad$DEPTO[Edad$DEPTO=="Río Negro"] <- "Rio Negro"
+Edad$DEPTO[Edad$DEPTO=="Paysandú"] <- "Paysandu"
+
+# Hay además otras discordancias, las siguientes entradas (DepartamentoCircuito) están en la base general de resultados, pero no en la base de edades.
+setdiff(unique(paste0(Base$DEPTO, Base$CIRCUITO)), 
+        unique(paste0(Edad$DEPTO, Edad$CIRCUITO)))
+
+# Menos importante para estos fines, las entradas que siguen están en la base de edades promedios, pero no en las de resultados
+setdiff(unique(paste0(Edad$DEPTO, Edad$CIRCUITO)), 
+        unique(paste0(Base$DEPTO, Base$CIRCUITO)))
+
+# Estos casos, de estar presentes en el subset requerido, se eliminarán automáticamente al hacer el emparejamiento.
+
+# Luego, hay 34 combinaciones de departamento / circuito que se repiten. Esto puede ser problemático ya que el resultado del emparejamiento tendría más filas de las que corresponde. La lista de duplicados es la siguiente
+
+Edad$ID <- paste0(Edad$DEPTO, Edad$CIRCUITO) #Crea un ID unico por combinación Depto/circuito
+
+Edad$ID[duplicated(Edad$ID)]
+
+# Optaré por eliminar estos registros para evitar errores
+Edad <- Edad[!duplicated(Edad$ID),] 
+
 ```
 
 
-```{r Preg5b}
-par(mfrow=c(1,1))
-boxplot(CabildoA$Edadprom, col = "gold1",
-        main = "Distribución de edad promedio",
-        sub= "Circuitos donde CA fue exitoso",
-        ylim = c(18,90),
-        ylab= "años")
+
+```{r Preg5a}
+
+Cabildo <- rbind(Primero = Circ_nth(Base, Partido = "Partido Cabildo Abierto", nth=1),
+                 Segundo = Circ_nth(Base, Partido = "Partido Cabildo Abierto", nth=2))
+
+
+Cabildo$ID <- paste0(Cabildo$DEPTO, Cabildo$CIRCUITO) # Crea un ID igual que con la base de Edades, para hacer el merge por este ID
+
+CabildoEdad <- merge(Cabildo[, c(2,4,5)], Edad[, c(3,4)], by=c("ID"))
+
+
+# Por algún motivo hay una fila de NAs. Esta se elimina al hacer el merge, ¿problema en la función?. No afecta los resultados, pero amerita atención.
+#dim(Cabildo)
+#dim(CabildoEdad)
+
+E1 <- Estadisticos(CabildoEdad$Edadprom)
+E2 <- Estadisticos(Edad$Edadprom)
+E  <- cbind(E1, E2$Valor) # si se usa merge no conserva el orden de las filas
+names(E) <- c("Estadístico", "Valor CA", "Valor general")
+
+E %>% kbl(caption = "Distribución de edad de los circuitos en los que Cabildo Abierto salió primero o segundo. Estadísticos de resumen y comparación con el universo de votantes" ) %>% 
+      kable_paper("hover", full_width = F, html_font = "Cambria" ) %>% 
+      row_spec(row = 0 ,bold=T) %>%
+      row_spec(row = 6 ,bold=T) %>% 
+      kable_styling(font_size = 12, position="left") %>% 
+      collapse_rows(columns = 1) %>% 
+      footnote("Fuente: Elaboración propia en base a datos de la Corte Electoral", 
+               general_title = "", fixed_small_size = T)
 
 ```
+
 
 6. Presente los resultados de la pregunta 1 y 2 gráficamente
 
 ```{r Preg6}
 
 T1 <- doBy::summary_by(data = FUN_Votos(Base), formula = CNT_VOTOS ~ LEMA, 
-                               FUN = sum, order = FALSE)
+                       FUN = sum, order = FALSE)
 T1$Porcentaje <- round(100*(T1$CNT_VOTOS /sum(T1$CNT_VOTOS)),2)
+# Tabla de resumen y columna de porcentajes. Repetido de la pregunta 1
 
-T1x <- reshape2::melt(T1)
-T1x <- T1x[T1x$variable == "Porcentaje",]
-T1x$LEMA <-  c("FA", "PN","PC", "CA", "PERI", "PG", "PI", "PVA", "AP", "PD", "PT")
+T1x <- reshape2::melt(T1) # formato long
+T1x <- T1x[T1x$variable == "Porcentaje",] # Selección de datos para graficar
+T1x$LEMA <-  c("FA", "PN","PC", "CA", "PERI", "PG", "PI", "PVA", "AP", "PD", "PT") 
+# Cambiar los nombres por las etiquetas para facilitar la lectura del gráfico. 
+
 
 G1 <- ggplot(data = T1x, aes(x = reorder(LEMA, -value), y = value)) +
-      geom_bar(stat="identity", position="stack", fill = "deepskyblue4", color = "black") + ylim(0,50) +
-      geom_text(aes(label= paste0(value, "%")), vjust = -0.5, color = "gray9", size = 3) + labs(x = "", y = "",
-                title = "Resultado de la elección nacional", subtitle = "27 de octubre de 2019",
-                caption = "Elaboración en base a datos de la Corte Electoral") +
-      theme_calc()
+        geom_bar(stat="identity", position="stack", 
+                   fill = "deepskyblue4", color = "black") + 
+        ylim(0,50) +
+        geom_text(aes(label= paste0(value, "%")), vjust = -0.5, 
+                    color = "gray9", size = 3) + labs(x = "", y = "",
+                    title = "Resultado de la elección nacional", subtitle = "27 de octubre de 2019",
+                    caption = "Elaboración en base a datos de la Corte Electoral") +
+        theme_calc()
 
 G1
 ```
@@ -199,27 +261,36 @@ G1
 
 ```{r Preg7}
 
-Edad <- Edades[c(1,2,6)]
-names(Edad) <- c("DEPTO", "CIRCUITO", "Edadprom")
-
 DF <- FUN_Votos(Base, Departamento = "Montevideo", Circuito = TRUE)
 DF <- merge(DF, Edad, by=c("DEPTO", "CIRCUITO"))
 
 
 G2 <- ggplot(DF, aes(x=CNT_VOTOS, y=Edadprom))+
-  geom_point()+
-  facet_wrap(~reorder(LEMA, -CNT_VOTOS), scales = "free") +
-  geom_smooth(method='lm')+
-  labs(colour = NULL, title = "Votación por partido y por circuito vs edad promedio del circuito",
-       subtitle = "Elecciones nacionales. Uruguay 2019",
-       caption = "Fuente: elaboración propia sobre datos de la Corte Electoral")+
-  xlab("Cantidad de votos")+
-  ylab("Edad promedio del circuito")+
-  theme(plot.margin = margin(30,30,30,30))+
-  theme_calc()
+        geom_point()+
+        facet_wrap(~reorder(LEMA, -CNT_VOTOS), scales = "free") +
+        geom_smooth(method='lm')+
+        labs(colour = NULL, title = "Edad promedio vs votación por circuito según partido político",
+             subtitle = "Elecciones nacionales. Uruguay 2019",
+             caption = "Fuente: elaboración propia sobre datos de la Corte Electoral")+
+        xlab("Cantidad de votos")+
+        ylab("Edad promedio del circuito")+
+        theme(plot.margin = margin(30,30,30,30))+
+        theme_calc()
 
 G2
 
 ```
 
+```{r, include= FALSE}
+
+# Otra opción, con el sistema lattice
+
+lattice::xyplot(Edadprom ~ CNT_VOTOS | LEMA, data=DF,
+                type=c('p', 'r'), grid = TRUE,
+                lwd=2, col.line='black',
+                main = "Edad promedio vs votación por circuito según partido político",
+                xlab = "Cantidad de votos",
+                ylab = "Edad promedio del circuito")
+
+```
 
