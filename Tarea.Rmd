@@ -40,35 +40,42 @@ Base <- Data
 
 
 
-1. **¿Cuál fue el resultado de la elección en porcentaje a nivel nacional?**
+1. **¿Cuál fue el resultado de la elección en porcentaje a nivel nacional?**  
+
 
 ```{r Preg1a}
 T1 <- doBy::summary_by(data = FUN_Votos(Base), formula = CNT_VOTOS ~ LEMA, FUN = sum, order = FALSE) 
 
 # Otra opción: aggregate(CNT_VOTOS ~ LEMA, Base, sum), pero con doBy sale ordenada de mayor a menor sin necesidad de más código. 
 
-T1$Porcentaje <- round(100*(T1$CNT_VOTOS /sum(T1$CNT_VOTOS)),2)
+T1$Porcentaje <- round(100*(T1$CNT_VOTOS /sum(T1$CNT_VOTOS)),2) # Agrega columna de %
 ```
 
-El resultado de la elección a nivel nacional por partido político se puede ver en la siguiente tabla.
+El resultado de la elección a nivel nacional por partido político se puede ver en la siguiente tabla.  
 
-Como se puede ver, el partido que obtuvo más votos a nivel nacional fue el `r T1[1,1]`, obteniendo el `r T1[1,3]`% de los votos, que implica una diferencia de `r (T1[1,3] - T1[2,3])`% con el partido que salió en segundo lugar (el `r T1[2,1]`)
+
+Como se puede ver, el partido que obtuvo más votos a nivel nacional fue el `r T1[1,1]`, obteniendo el `r T1[1,3]`% de los votos, que implica una diferencia de `r (T1[1,3] - T1[2,3])`% con el partido que salió en segundo lugar (el `r T1[2,1]`)  
+  
+  
 
 ```{r Preg1b}
-T1 %>% kbl(., caption = "Resultado por departamento. Elección nacional. Uruguay 2019" , 
-          col.names = c("Partido", "Votos", "% del total") )%>% 
-      kable_paper("hover", full_width = F, html_font = "Cambria" ) %>% 
+T1 %>% kbl(., 
+           caption = "Resultado por departamento. Elección nacional. Uruguay Octubre 2019",
+           col.names = c("Partido", "Votos", "% del total") )%>% 
+      kable_paper("hover", full_width = TRUE, html_font = "Cambria" ) %>% 
       row_spec(row = 0 ,bold=T) %>% 
-      kable_styling(font_size = 12, position="left") %>% 
+      kable_styling(font_size = 14, position="left") %>% 
       footnote("Fuente: Elaboración propia en base a datos de la Corte Electoral", 
                general_title = "", fixed_small_size = T)
 
 ```
 
 
-2. **¿Quién ganó la elección en cada departamento y cuál fue la distancia en términos porcentuales entre el primero y el segundo en cada departamento?**
+2. **¿Quién ganó la elección en cada departamento y cuál fue la distancia en términos porcentuales entre el primero y el segundo en cada departamento?**  
 
-La tabla 2. resume el ganador por departamento y el margen de victoria. 
+
+La Tabla 2 resume el ganador por departamento y el margen de victoria.  
+
 
 ```{r Preg2}
 
@@ -76,64 +83,75 @@ T2 <- Winner(Base)
 
 T2 %>% 
       kbl(caption = "Partido ganador por departamento y margen de victoria. Elección
-          Nacional. Uruguay 2019",
+          Nacional. Uruguay Octubre 2019",
           col.names = c("Departamento", "Partido Ganador", "Margen (%)"),align = "llr") %>%
-      kable_paper("hover", full_width = F, html_font = "Cambria" ) %>%
+      kable_paper("hover", full_width = TRUE, html_font = "Cambria" ) %>%
       row_spec(row = 0 ,bold=T) %>%
-      kable_styling(font_size = 12, position="left") %>% 
+      kable_styling(font_size = 14, position="left") %>% 
       footnote("Fuente: Elaboración propia en base a datos de la Corte Electoral",
                general_title = "", fixed_small_size = T)
 
 ```
 
 
-Puede verse que el Partido Nacional fue victorioso en `r sum(T2$Ganador=="Partido Nacional")` de los 19 departamentos, el Frente Amplio lo fue en `r sum(T2$Ganador=="Partido Frente Amplio")`, mientras que el Partido Colorado solamente en `r sum(T2$Ganador=="Partido Colorado")`
+Puede verse que el Partido Nacional fue victorioso en `r sum(T2$Ganador=="Partido Nacional")` de los 19 departamentos, el Frente Amplio lo fue en `r sum(T2$Ganador=="Partido Frente Amplio")`, mientras que el Partido Colorado solamente en `r sum(T2$Ganador=="Partido Colorado")`.  
+
+
+Por otra parte, el mayor diferencia a favor la obtuvo el `r T2$Ganador[which.max(as.numeric(as.vector(T2$Margen)))]`, con el `r max(as.numeric(as.vector(T2$Margen)))`% de ventaja en el departamento de `r T2$Depto[which.max(as.numeric(as.vector(T2$Margen)))]` , mientras que el margen más acotado se dio en `r T2$Depto[which.max(as.numeric(as.vector(T2$Margen)))]` donde el `r T2$Ganador[which.min(as.numeric(as.vector(T2$Margen)))]` se impuso con tan solo  el `r min(as.numeric(as.vector(T2$Margen)))`% de los votos.  
+
 
 
 3. **¿Cuál fue la hoja de votación más votada en cada departamento y para cada uno de los tres partidos principales del sistema?**
 
-La respuesta es presentada en la tabla siguiente. 
+La respuesta es presentada en la tabla siguiente.  
+
 
 ```{r Preg3a}
 T3 <- Hoja_win(Base)
+rownames(T3) <- NULL
 
-T3 %>% kbl(caption = "Hoja más votada por departamento y por partido. Elección nacional. Uruguay 2019") %>% 
-      kable_paper("hover", full_width = F, html_font = "Cambria" ) %>% 
+T3 %>% kbl(caption = "Hoja más votada por 
+                       departamento y por partido. Elección nacional. Uruguay Octubre 2019") %>% 
+      kable_paper("hover", full_width = T, html_font = "Cambria" ) %>% 
       row_spec(row = 0 ,bold=T) %>% 
-      kable_styling(font_size = 12, position="left") %>% 
+      kable_styling(font_size = 14, position="left") %>% 
       collapse_rows(columns = 1) %>% 
       footnote("Fuente: Elaboración propia en base a datos de la Corte Electoral", 
                general_title = "", fixed_small_size = T)
-
 ```
 
 
 ```{r Preg3b, include = FALSE}
 
-Hx <- unique(T3$Hoja)
+Hx <- unique(T3$HOJA)
 
 H <- function(Tabla, Vector) { 
   v <- vector()
   for(i in 1:length(Vector)){
-     v[i]  <- sum(Vector[i]==Tabla$Hoja)
+     v[i]  <- sum(Vector[i]==Tabla$HOJA)
   }
   v2 <- vector()
   for(i in 1:length(Vector)){
-     v2[i]  <- unique(Tabla$Partido[which(Vector[i]==Tabla$Hoja)])
+     v2[i]  <- unique(Tabla$LEMA[which(Vector[i]==Tabla$HOJA)])
   }
   Res_Hoja <- cbind.data.frame(Vector, v2, v)
   names(Res_Hoja) <- c("Hoja", "Partido", "Cantidad_Deptos")
   return(Res_Hoja)
   
-}
+} # Resume la cantidad de victorias por hoja
 
 Res_Hojas <- H(T3, Hx)
+Res_Hojas <- Res_Hojas[order(Res_Hojas$Cantidad_Deptos, decreasing = T), ]
+
 ```
+  
+  
+Es de notar que en el caso del Frente Amplio, la hoja ganadora en más departamentos fue la `r Res_Hojas[Res_Hojas$Partido=="Partido Frente Amplio",][1,1]` que ganó en `r Res_Hojas[Res_Hojas$Partido=="Partido Frente Amplio",][1,3]` departamentos. En el caso del Partido Nacional, lo fue la hoja `r Res_Hojas[Res_Hojas$Partido=="Partido Nacional",][1,1]` con `r Res_Hojas[Res_Hojas$Partido=="Partido Nacional",][1,3]` departamentos a su favor, mientras que la hoja colorada más victoriosa con  `r Res_Hojas[Res_Hojas$Partido=="Partido Colorado",][1,3]` departamentos fue la `r Res_Hojas[Res_Hojas$Partido=="Partido Colorado",][1,1]`.  
 
-Es de notar que en el caso del Frente Amplio, la hoja ganadora en más departamentos fue la `r Res_Hojas[Res_Hojas$Partido=="Partido Frente Amplio",][1,1]` que ganó en `r Res_Hojas[Res_Hojas$Partido=="Partido Frente Amplio",][1,3]` departamentos. En el caso del Partido Nacional, lo fue la hoja `r Res_Hojas[Res_Hojas$Partido=="Partido Nacional",][1,1]` con `r Res_Hojas[Res_Hojas$Partido=="Partido Nacional",][1,3]` departamentos a su favor, mientras que la hoja colorada más victoriosa con  `r Res_Hojas[Res_Hojas$Partido=="Partido Colorado",][1,3]` departamentos fue la `r Res_Hojas[Res_Hojas$Partido=="Partido Colorado",][1,1]`.
 
 
-4. **¿En que departamento votó mejor el partido Cabildo Abierto?**
+4. **¿En que departamento votó mejor el partido Cabildo Abierto?**    
+
 
 ```{r Preg4}
 
@@ -151,20 +169,24 @@ ResCA$porcentaje <- round(100*(ResCA$CNT_VOTOS/TotalDepto$CNT_VOTOS),2)
 
 ```
 
-El departamento en el que Cabildo Abierto obtuvo su mejor votación (como porcentaje del total de votos del departamento) fue `r ResCA$DEPTO[which.max(ResCA$porcentaje)]`, con un `r ResCA$porcentaje[which.max(ResCA$porcentaje)]`%.
+El departamento en el que Cabildo Abierto obtuvo su mejor votación (como porcentaje del total de votos del departamento) fue `r ResCA$DEPTO[which.max(ResCA$porcentaje)]`, con un `r ResCA$porcentaje[which.max(ResCA$porcentaje)]`%.  
+  
+  
 
-5. **¿Cuál es la distribución de edad en los circuitos de todo el país en donde ganó o salió segundo Cabildo Abierto?**
+5. **¿Cuál es la distribución de edad en los circuitos de todo el país en donde ganó o salió segundo Cabildo Abierto?**  
 
-La tabla inferior muestra los principales estadísticos de resumen de la distribución de edad en los circuitos en los que Cabildo Abierto salió primero o segundo. 
+La tabla inferior muestra los principales estadísticos de resumen de la distribución de edad en los circuitos en los que Cabildo Abierto salió primero o segundo.  
+  
+  
 
 ```{r Consideraciones previas, include=FALSE}
-# La base de edades requiere algunas consideraciones para que al combinarla con la base general de resultados por circuito el resultado sea satisfactorio y no haya pérdida ni duplicaciones de caso.
+# La base de edades requiere algunas consideraciones para que al combinarla con la base general el resultado sea satisfactorio y no haya pérdida ni duplicaciones de casos.
 
 # Para mas claridad asignaré los mismos nombres a los columnas comunes en ambas DF.
 Edad <- Edades[c(1,2,6)]
 names(Edad) <- c("DEPTO", "CIRCUITO", "Edadprom")
 
-# Lo primero es corregir los nombres de los departamentos de un DF, para que sean iguales en ambos (de lo contrario habrá pérdida de casos al combinar las bases).
+# Lo primero es corregir los nombres de los departamentos de un DF, para que sean iguales en ambos (de lo contrario habrá pérdida de casos al combinar las DF).
 
 setdiff(unique(Edad$DEPTO), unique(Base$DEPTO)) # Hay inconvenientes en cuatro casos
 
@@ -214,13 +236,13 @@ CabildoEdad <- merge(Cabildo[, c(2,4,5)], Edad[, c(3,4)], by=c("ID"))
 E1 <- Estadisticos(CabildoEdad$Edadprom)
 E2 <- Estadisticos(Edad$Edadprom)
 E  <- cbind(E1, E2$Valor) # si se usa merge no conserva el orden de las filas
-names(E) <- c("Estadístico", "Valor CA", "Valor general")
+names(E) <- c("Estadístico", "Valor Cabildo Abierto", "Valor general")
 
-E %>% kbl(caption = "Distribución de edad de los circuitos en los que Cabildo Abierto salió primero o segundo. Estadísticos de resumen y comparación con el universo de votantes" ) %>% 
-      kable_paper("hover", full_width = F, html_font = "Cambria" ) %>% 
+E %>% kbl(caption = "Estadísticos de resumen. Edad promedio de los circuitos dónde Cabildo Abierto fue exitoso." ) %>% 
+      kable_paper("hover", full_width = T, html_font = "Cambria" ) %>% 
       row_spec(row = 0 ,bold=T) %>%
       row_spec(row = 6 ,bold=T) %>% 
-      kable_styling(font_size = 12, position="left") %>% 
+      kable_styling(font_size = 14, position="left") %>% 
       collapse_rows(columns = 1) %>% 
       footnote("Fuente: Elaboración propia en base a datos de la Corte Electoral", 
                general_title = "", fixed_small_size = T)
@@ -228,10 +250,10 @@ E %>% kbl(caption = "Distribución de edad de los circuitos en los que Cabildo A
 ```
 
 
-6. Presente los resultados de la pregunta 1 y 2 gráficamente
+6. **Presente los resultados de la pregunta 1 y 2 gráficamente.**  
 
-```{r Preg6}
 
+```{r Preg6, fig.width= 9, fig.asp=0.8}
 T1 <- doBy::summary_by(data = FUN_Votos(Base), formula = CNT_VOTOS ~ LEMA, 
                        FUN = sum, order = FALSE)
 T1$Porcentaje <- round(100*(T1$CNT_VOTOS /sum(T1$CNT_VOTOS)),2)
@@ -249,36 +271,64 @@ G1 <- ggplot(data = T1x, aes(x = reorder(LEMA, -value), y = value)) +
         ylim(0,50) +
         geom_text(aes(label= paste0(value, "%")), vjust = -0.5, 
                     color = "gray9", size = 3) + labs(x = "", y = "",
-                    title = "Resultado de la elección nacional", subtitle = "27 de octubre de 2019",
+                    title = "Resultado de la elección nacional", 
+                    subtitle = "27 de octubre de 2019",
                     caption = "Elaboración en base a datos de la Corte Electoral") +
-        theme_calc()
+        theme_calc()+
+        theme(plot.margin = margin(30,30,30,30))+
+        theme(text=element_text(size=12, family="Cambria"))
 
 G1
 ```
 
 
-7. Presente gráficamente (en un panel) un ajuste lineal de la votación por circuito de cada partido y la edad promedio de cada circuito de Montevideo
+```{r Preg6b, fig.width= 9, fig.asp=0.8}
+T2 <- Winner(Base)
+T2$Margen <- as.numeric(as.character(T2$Margen))
 
-```{r Preg7}
+G1b <- ggplot(data = T2, aes(x = reorder(Depto, -Margen), y = Margen, fill=Ganador)) +
+        geom_bar(stat="identity", position="stack", color = "black") + 
+        ylim(0,30) +
+        scale_fill_manual(values=c("firebrick", "goldenrod", "dodgerblue3"))+
+        geom_text(aes(label= paste0(Margen, "%")), vjust = -1,
+              color = "gray9", size = 2.5) + 
+        labs(x = "", y = "",
+              title = "Margen de victoria del partido ganador por departamento", 
+              subtitle = "Elección nacional. 27 de octubre de 2019",
+              caption = "Elaboración en base a datos de la Corte Electoral") +
+        theme_calc()+
+        theme(plot.margin = margin(30,30,30,30), 
+              axis.text.x = element_text(angle = -30, vjust = 1, hjust = 0),
+              legend.position= c(0.8, 0.8),
+              text=element_text(size=12, family="Cambria"))
+
+G1b
+```
+
+
+7. **Presente gráficamente (en un panel) un ajuste lineal de la votación por circuito de cada partido y la edad promedio de cada circuito de Montevideo**  
+  
+
+```{r Preg7, fig.width= 9, fig.asp=0.8}
 
 DF <- FUN_Votos(Base, Departamento = "Montevideo", Circuito = TRUE)
 DF <- merge(DF, Edad, by=c("DEPTO", "CIRCUITO"))
 
 
-G2 <- ggplot(DF, aes(x=CNT_VOTOS, y=Edadprom))+
-        geom_point()+
+G2 <- ggplot(DF, aes(x=Edadprom, y=CNT_VOTOS))+
+        geom_point(alpha = 1/5)+
         facet_wrap(~reorder(LEMA, -CNT_VOTOS), scales = "free") +
-        geom_smooth(method='lm')+
-        labs(colour = NULL, title = "Edad promedio vs votación por circuito según partido político",
+        geom_smooth(method='lm',formula = y ~ x)+
+        labs(title = "Votación por partido político vs edad promedio del circuito",
              subtitle = "Elecciones nacionales. Uruguay 2019",
              caption = "Fuente: elaboración propia sobre datos de la Corte Electoral")+
         xlab("Cantidad de votos")+
         ylab("Edad promedio del circuito")+
+        theme_calc()+
         theme(plot.margin = margin(30,30,30,30))+
-        theme_calc()
+        theme(text=element_text(size=12, family="Cambria"))
 
 G2
-
 ```
 
 ```{r, include= FALSE}
@@ -292,5 +342,7 @@ lattice::xyplot(Edadprom ~ CNT_VOTOS | LEMA, data=DF,
                 xlab = "Cantidad de votos",
                 ylab = "Edad promedio del circuito")
 
+FUN_Votos(Base, Departamento= c("Rocha", "Maldonado"), Partido = "Partido Nacional")
 ```
+
 
