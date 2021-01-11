@@ -97,7 +97,7 @@ T2 %>%
 Puede verse que el Partido Nacional fue victorioso en `r sum(T2$Ganador=="Partido Nacional")` de los 19 departamentos, el Frente Amplio lo fue en `r sum(T2$Ganador=="Partido Frente Amplio")`, mientras que el Partido Colorado solamente en `r sum(T2$Ganador=="Partido Colorado")`.  
 
 
-Por otra parte, el mayor diferencia a favor la obtuvo el `r T2$Ganador[which.max(as.numeric(as.vector(T2$Margen)))]`, con el `r max(as.numeric(as.vector(T2$Margen)))`% de ventaja en el departamento de `r T2$Depto[which.max(as.numeric(as.vector(T2$Margen)))]` , mientras que el margen más acotado se dio en `r T2$Depto[which.max(as.numeric(as.vector(T2$Margen)))]` donde el `r T2$Ganador[which.min(as.numeric(as.vector(T2$Margen)))]` se impuso con tan solo  el `r min(as.numeric(as.vector(T2$Margen)))`% de los votos.  
+Por otra parte, el mayor diferencia a favor la obtuvo el `r T2$Ganador[which.max(as.numeric(as.vector(T2$Margen)))]`, con el `r max(as.numeric(as.vector(T2$Margen)))`% de ventaja en el departamento de `r T2$Depto[which.max(as.numeric(as.vector(T2$Margen)))]` , mientras que el margen más acotado se dio en `r T2$Depto[which.min(as.numeric(as.vector(T2$Margen)))]` donde el `r T2$Ganador[which.min(as.numeric(as.vector(T2$Margen)))]` se impuso con tan solo  el `r min(as.numeric(as.vector(T2$Margen)))`% de los votos.  
 
 
 
@@ -270,7 +270,8 @@ G1 <- ggplot(data = T1x, aes(x = reorder(LEMA, -value), y = value)) +
                    fill = "deepskyblue4", color = "black") + 
         ylim(0,50) +
         geom_text(aes(label= paste0(value, "%")), vjust = -0.5, 
-                    color = "gray9", size = 3) + labs(x = "", y = "",
+                    color = "gray9", size = 3, family ="Cambria") + 
+                    labs(x = "", y = "",
                     title = "Resultado de la elección nacional", 
                     subtitle = "27 de octubre de 2019",
                     caption = "Elaboración en base a datos de la Corte Electoral") +
@@ -287,11 +288,11 @@ T2 <- Winner(Base)
 T2$Margen <- as.numeric(as.character(T2$Margen))
 
 G1b <- ggplot(data = T2, aes(x = reorder(Depto, -Margen), y = Margen, fill=Ganador)) +
-        geom_bar(stat="identity", position="stack", color = "black") + 
+        geom_bar(stat="identity", position="stack") + 
         ylim(0,30) +
         scale_fill_manual(values=c("firebrick", "goldenrod", "dodgerblue3"))+
         geom_text(aes(label= paste0(Margen, "%")), vjust = -1,
-              color = "gray9", size = 2.5) + 
+              color = "gray9", size = 2.5, family="Cambria") + 
         labs(x = "", y = "",
               title = "Margen de victoria del partido ganador por departamento", 
               subtitle = "Elección nacional. 27 de octubre de 2019",
@@ -316,9 +317,9 @@ DF <- merge(DF, Edad, by=c("DEPTO", "CIRCUITO"))
 
 
 G2 <- ggplot(DF, aes(x=Edadprom, y=CNT_VOTOS))+
-        geom_point(alpha = 1/5)+
+        geom_point(alpha = 1/5, color="gray40")+
         facet_wrap(~reorder(LEMA, -CNT_VOTOS), scales = "free") +
-        geom_smooth(method='lm',formula = y ~ x)+
+        geom_smooth(method='lm',formula = y ~ x, color="firebrick2", se=TRUE)+
         labs(title = "Votación por partido político vs edad promedio del circuito",
              subtitle = "Elecciones nacionales. Uruguay 2019",
              caption = "Fuente: elaboración propia sobre datos de la Corte Electoral")+
@@ -342,7 +343,6 @@ lattice::xyplot(Edadprom ~ CNT_VOTOS | LEMA, data=DF,
                 xlab = "Cantidad de votos",
                 ylab = "Edad promedio del circuito")
 
-FUN_Votos(Base, Departamento= c("Rocha", "Maldonado"), Partido = "Partido Nacional")
 ```
 
 
